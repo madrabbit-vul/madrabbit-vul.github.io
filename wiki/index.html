@@ -22,44 +22,105 @@
     .markdown-section { max-width: 900px; }
     .sidebar-toggle { background-color: #0d1117; }
 
-    /* Language Switcher */
-    .lang-switcher {
-      padding: 14px 20px;
-      border-bottom: 1px solid #1a1a2e;
+    /* Fixed Language Switcher - top right corner */
+    .wiki-lang-switch {
+      position: fixed;
+      top: 12px;
+      right: 60px;
+      z-index: 9999;
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-    .lang-switcher button {
-      padding: 5px 14px;
+      gap: 4px;
+      background: #161b22;
       border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 4px 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .wiki-lang-switch button {
+      padding: 4px 12px;
+      border: none;
       border-radius: 4px;
       background: transparent;
       color: #8b949e;
       font-size: 13px;
       cursor: pointer;
       transition: all 0.2s;
+      line-height: 1.4;
     }
-    .lang-switcher button:hover {
-      border-color: #00f3ff;
+    .wiki-lang-switch button:hover {
       color: #00f3ff;
     }
-    .lang-switcher button.active {
+    .wiki-lang-switch button.active {
       background: #00f3ff;
       color: #0d1117;
-      border-color: #00f3ff;
       font-weight: 600;
     }
-    .lang-switcher .divider {
+    .wiki-lang-switch .sep {
       color: #30363d;
-      font-size: 12px;
+      font-size: 11px;
+      user-select: none;
     }
   </style>
 </head>
 <body>
+  <!-- Fixed language switcher -->
+  <div class="wiki-lang-switch" id="wikiLangSwitch">
+    <button data-lang="en" class="active">EN</button>
+    <span class="sep">|</span>
+    <button data-lang="zh">中文</button>
+  </div>
+
   <div id="app">Loading...</div>
   <script>
     var currentLang = localStorage.getItem('madrabbit-wiki-lang') || 'en';
+
+    // Set initial button state
+    document.addEventListener('DOMContentLoaded', function() {
+      var btns = document.querySelectorAll('#wikiLangSwitch button');
+      btns.forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-lang') === currentLang);
+      });
+    });
+
+    function applyLang(lang) {
+      var sidebar = document.querySelector('.sidebar-nav');
+      if (!sidebar) return;
+      var links = sidebar.querySelectorAll('a[href]');
+      links.forEach(function(link) {
+        var href = link.getAttribute('href');
+        if (!href || href === '#') return;
+        if (lang === 'zh') {
+          if (href.indexOf('_en.md') !== -1) {
+            link.setAttribute('href', href.replace(/_en\.md/g, '.md'));
+          }
+        } else {
+          if (href.indexOf('_en.md') === -1 && href.match(/\.md$/)) {
+            link.setAttribute('href', href.replace(/\.md$/, '_en.md'));
+          }
+        }
+      });
+    }
+
+    // Language switch click handler
+    document.getElementById('wikiLangSwitch').addEventListener('click', function(e) {
+      var btn = e.target.closest('button[data-lang]');
+      if (!btn) return;
+      var lang = btn.getAttribute('data-lang');
+      if (lang === currentLang) return;
+      currentLang = lang;
+      localStorage.setItem('madrabbit-wiki-lang', lang);
+      this.querySelectorAll('button').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+      });
+      applyLang(lang);
+      // Reload current page in new language
+      var activeLink = document.querySelector('.sidebar-nav a.active');
+      if (activeLink) {
+        var href = activeLink.getAttribute('href');
+        if (href && window.__docsifyVM) window.__docsifyVM.route.to(href);
+      }
+    });
 
     window.$docsify = {
       name: 'MadRabbit Wiki',
@@ -77,67 +138,10 @@
       },
       plugins: [
         function(hook, vm) {
-          // Inject language switcher into sidebar
-          hook.mounted(function() {
-            var sidebar = document.querySelector('.sidebar-nav');
-            if (!sidebar) return;
-
-            var switcher = document.createElement('div');
-            switcher.className = 'lang-switcher';
-            switcher.innerHTML =
-              '<button data-lang="en" class="' + (currentLang === 'en' ? 'active' : '') + '">EN</button>' +
-              '<span class="divider">|</span>' +
-              '<button data-lang="zh" class="' + (currentLang === 'zh' ? 'active' : '') + '">\u4E2D\u6587</button>';
-
-            switcher.addEventListener('click', function(e) {
-              var btn = e.target.closest('button[data-lang]');
-              if (!btn) return;
-              var lang = btn.getAttribute('data-lang');
-              if (lang === currentLang) return;
-              currentLang = lang;
-              localStorage.setItem('madrabbit-wiki-lang', lang);
-              switcher.querySelectorAll('button').forEach(function(b) {
-                b.classList.toggle('active', b.getAttribute('data-lang') === lang);
-              });
-              applyLang(lang);
-              // Navigate to same page in new language
-              var activeLink = sidebar.querySelector('.sidebar-nav a.active');
-              if (activeLink) {
-                var href = activeLink.getAttribute('href');
-                if (href) vm.route.to(href);
-              }
-            });
-
-            sidebar.insertBefore(switcher, sidebar.firstChild);
-            applyLang(currentLang);
-          });
-
-          // Re-apply language after sidebar re-renders
+          window.__docsifyVM = vm;
           hook.doneEach(function() {
             applyLang(currentLang);
           });
-
-          function applyLang(lang) {
-            var sidebar = document.querySelector('.sidebar-nav');
-            if (!sidebar) return;
-
-            var links = sidebar.querySelectorAll('a[href]');
-            links.forEach(function(link) {
-              var href = link.getAttribute('href');
-              if (!href) return;
-              if (lang === 'zh') {
-                // English -> Chinese: remove _en before .md
-                if (href.indexOf('_en.md') !== -1) {
-                  link.setAttribute('href', href.replace(/_en\.md/g, '.md'));
-                }
-              } else {
-                // Chinese -> English: ensure _en before .md
-                if (href.match(/[^_]\.md$/) && href.indexOf('_en.md') === -1) {
-                  link.setAttribute('href', href.replace(/\.md$/, '_en.md'));
-                }
-              }
-            });
-          }
         }
       ]
     }
