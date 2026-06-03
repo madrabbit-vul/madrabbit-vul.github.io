@@ -189,7 +189,7 @@
       }
 
       // Transform labels
-      var allEls = sidebar.querySelectorAll('a, strong, li');
+      var allEls = sidebar.querySelectorAll('a, strong:not(:has(a))');
       for (var j = 0; j < allEls.length; j++) {
         var el = allEls[j];
         var text = el.textContent.trim();
