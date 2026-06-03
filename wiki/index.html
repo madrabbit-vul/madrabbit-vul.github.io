@@ -67,7 +67,6 @@
   <script>
     var currentLang = localStorage.getItem('wiki-lang') || 'en';
 
-    // Set initial button state
     (function() {
       var btns = document.querySelectorAll('#wikiLangSwitch button');
       for (var i = 0; i < btns.length; i++) {
@@ -75,7 +74,6 @@
       }
     })();
 
-    // Convert hash route between languages
     function convertHash(hash, toLang) {
       if (!hash || hash === '#' || hash === '#/' || hash === '#/home_zh' || hash === '#/README') {
         return toLang === 'zh' ? '#/home_zh' : '';
@@ -83,8 +81,6 @@
       if (toLang === 'zh') {
         return hash.replace(/_en/g, '');
       } else {
-        // EN: add _en before the end of the path
-        // e.g. #/SQL注入/漏洞原理 -> #/SQL注入/漏洞原理_en
         var parts = hash.split('?');
         var path = parts[0];
         if (path.indexOf('_en') === -1) {
@@ -94,36 +90,113 @@
       }
     }
 
-    // Click handler
     document.getElementById('wikiLangSwitch').addEventListener('click', function(e) {
       var btn = e.target.closest('button[data-lang]');
       if (!btn) return;
       var lang = btn.getAttribute('data-lang');
       if (lang === currentLang) return;
       localStorage.setItem('wiki-lang', lang);
-      // Convert current hash to target language before reload
       var newHash = convertHash(location.hash, lang);
       if (newHash) {
         location.hash = newHash;
       } else {
-        // Navigate to English homepage
         location.hash = '';
       }
       location.reload();
     });
 
-    function transformSidebarLinks(lang) {
+    // Sidebar label translations: English -> Chinese
+    var zhLabels = {
+      'Introduction': '项目简介',
+      'Deployment Guide': '部署指南',
+      'SQL Injection': 'SQL注入',
+      'Cross-Site Scripting (XSS)': '跨站脚本 XSS',
+      'XXE Injection': 'XXE外部实体注入',
+      'CSRF': 'CSRF 跨站请求伪造',
+      'SSRF': 'SSRF 服务器端请求伪造',
+      'Remote Code Execution': '远程命令执行 RCE',
+      'Access Control': '失效的访问控制',
+      'File Operation': '文件操作',
+      'Security Misconfiguration': '安全配置',
+      'Information Disclosure': '敏感信息泄露',
+      'Authentication & Session': '认证与会话安全',
+      'Business Logic Flaws': '业务逻辑',
+      'Insecure Deserialization': '不安全的反序列化',
+      'Principle': '漏洞原理',
+      'Prevention': '漏洞防护',
+      'Level1 - SQL Login Bypass': 'Level1 - SQL登录绕过',
+      'Level2 - UNION Data Leakage': 'Level2 - UNION数据泄露',
+      'Level3 - MyBatis Numeric Injection': 'Level3 - MyBatis数字型注入',
+      'Level4 - MyBatis String Injection': 'Level4 - MyBatis字符串型注入',
+      'Level5 - MyBatis LIKE Injection': 'Level5 - MyBatis LIKE注入',
+      'Level6 - MyBatis Dynamic Table Name': 'Level6 - MyBatis动态表名注入',
+      'Level7 - MyBatis ORDER BY Injection': 'Level7 - MyBatis ORDER BY注入',
+      'Level8 - MyBatis IN Clause Injection': 'Level8 - MyBatis IN条件注入',
+      'Level9 - Blind SQL Injection': 'Level9 - 盲注',
+      'Level1 - Reflected XSS': 'Level1 - 反射型XSS',
+      'Level2 - Stored XSS': 'Level2 - 存储型XSS',
+      'Level3 - DOM-based XSS': 'Level3 - DOM型XSS',
+      'Level1 - In-band XXE File Read': 'Level1 - 有回显XXE文件读取',
+      'Level2 - Blind XXE OOB Exfiltration': 'Level2 - Blind XXE OOB外带',
+      'Level3 - Content-Type Switch XXE': 'Level3 - Content-Type切换XXE',
+      'Level1 - GET-based CSRF': 'Level1 - GET型CSRF',
+      'Level2 - POST-based CSRF': 'Level2 - POST型CSRF',
+      'Level3 - Ineffective CSRF Token': 'Level3 - 无效CSRF Token',
+      'Level1 - Basic SSRF': 'Level1 - 基础SSRF',
+      'Level2 - Protocol Exploitation': 'Level2 - 协议利用SSRF',
+      'Level3 - Filter Bypass': 'Level3 - 过滤绕过',
+      'Level4 - Redirect Bypass': 'Level4 - 重定向绕过',
+      'Level1 - Command Injection': 'Level1 - 命令注入',
+      'Level2 - SpEL Code Injection': 'Level2 - SpEL代码注入',
+      'Level1 - Horizontal Escalation': 'Level1 - 水平越权',
+      'Level2 - Vertical Escalation': 'Level2 - 垂直越权',
+      'Level3 - IDOR': 'Level3 - IDOR越权',
+      'Level1 - File Upload Bypass': 'Level1 - 文件上传绕过',
+      'Level2 - Path Traversal': 'Level2 - 路径遍历',
+      'Level3 - File Inclusion Bypass': 'Level3 - 文件包含绕过',
+      'Level1 - Actuator Endpoint Exposure': 'Level1 - Actuator端点泄露',
+      'Level2 - Swagger API Doc Exposure': 'Level2 - Swagger API文档泄露',
+      'Level1 - Error Message Disclosure': 'Level1 - 错误信息泄露',
+      'Level2 - Frontend Hardcoded Secrets': 'Level2 - 前端硬编码泄露',
+      'Level3 - Git Repository Exposure': 'Level3 - Git信息泄露',
+      'Level1 - Brute Force': 'Level1 - 弱密码破解',
+      'Level2 - Password Reset Bypass': 'Level2 - 任意密码重置',
+      'Level3 - JWT Token Security': 'Level3 - JWT令牌安全',
+      'Level1 - Price Tampering': 'Level1 - 价格篡改',
+      'Level2 - Coupon Abuse': 'Level2 - 优惠券滥用',
+      'Level3 - Process Skip': 'Level3 - 流程跳过',
+      'Level1 - Java Native Deserialization': 'Level1 - Java原生反序列化',
+      'Level2 - Fastjson Deserialization': 'Level2 - Fastjson反序列化',
+      'Level3 - Log4Shell': 'Level3 - Log4Shell'
+    };
+
+    // Reverse map: Chinese -> English
+    var enLabels = {};
+    for (var k in zhLabels) { enLabels[zhLabels[k]] = k; }
+
+    function transformSidebar(lang) {
       var sidebar = document.querySelector('.sidebar-nav');
       if (!sidebar) return;
+
+      // Transform links
       var links = sidebar.querySelectorAll('a');
       for (var i = 0; i < links.length; i++) {
         var a = links[i];
         var href = a.getAttribute('href');
-        if (!href) continue;
-        if (lang === 'zh') {
-          if (href.indexOf('_en') !== -1) {
-            a.setAttribute('href', href.replace(/_en/g, ''));
-          }
+        if (href && lang === 'zh' && href.indexOf('_en') !== -1) {
+          a.setAttribute('href', href.replace(/_en/g, ''));
+        }
+      }
+
+      // Transform labels
+      var allEls = sidebar.querySelectorAll('a, strong, li');
+      for (var j = 0; j < allEls.length; j++) {
+        var el = allEls[j];
+        var text = el.textContent.trim();
+        if (lang === 'zh' && zhLabels[text]) {
+          el.textContent = zhLabels[text];
+        } else if (lang === 'en' && enLabels[text]) {
+          el.textContent = enLabels[text];
         }
       }
     }
@@ -145,9 +218,9 @@
         depth: 3
       },
       plugins: [
-        function(hook, vm) {
+        function(hook) {
           hook.doneEach(function() {
-            transformSidebarLinks(currentLang);
+            transformSidebar(currentLang);
           });
         }
       ]
