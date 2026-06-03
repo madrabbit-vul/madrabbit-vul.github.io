@@ -18,8 +18,8 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url> madX
-cd madX
+git clone https://github.com/zhuifengshaonianhanlu/MadRabbit.git
+cd MadRabbit
 ```
 
 ### 2. Initialize the Database
