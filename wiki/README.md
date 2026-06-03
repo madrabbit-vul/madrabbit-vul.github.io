@@ -1,72 +1,72 @@
-# MadRabbit - Web 漏洞靶场系统
+# MadRabbit - Web Vulnerability Lab
 
-## 项目概述
+## Overview
 
-MadRabbit 是一个面向 Web 安全教学与实战的开源漏洞靶场系统。它涵盖了 OWASP Top 10 中 13 类常见的 Web 安全漏洞，每类漏洞提供多个由浅入深的挑战关卡，帮助学习者在"攻击-理解-修复"的闭环中掌握安全技能。
+MadRabbit is an open-source vulnerability lab designed for Web security education and hands-on practice. It covers 13 categories of common Web security vulnerabilities from the OWASP Top 10, each with multiple progressive challenge levels that help learners master security skills through an "attack - understand - fix" loop.
 
-与传统 CTF 平台不同，MadRabbit 的每个关卡都基于**真实业务场景**构建——登录认证、订单查询、文件上传、密码重置……你在靶场里见到的每一个漏洞，都可能在生产环境中真实存在。系统提供完整的源代码，学习者可以对照代码理解漏洞的成因，并在代码层面进行修复实践。
+Unlike traditional CTF platforms, every challenge in MadRabbit is built on **real-world business scenarios** — login authentication, order queries, file uploads, password resets... every vulnerability you encounter here could exist in a production environment. The system provides complete source code, allowing learners to trace the root cause of vulnerabilities in the code and practice fixes at the code level.
 
-## 技术架构
+## Tech Stack
 
-| 组件 | 技术选型 | 版本 |
-|------|---------|------|
-| 运行环境 | JDK | 17 |
-| 后端框架 | Spring Boot | 2.7.17 |
-| ORM 框架 | MyBatis | 2.3.1 |
-| 数据库 | MySQL | 8.0+ |
-| 接口文档 | SpringDoc OpenAPI (Swagger UI) | 1.7.0 |
-| 认证方案 | JWT (JJWT) | 0.11.5 |
-| 构建工具 | Maven | 3.6+ |
-| 前端 | 原生 HTML / CSS / JS（Spring Boot 静态托管） | - |
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Runtime | JDK | 17 |
+| Backend Framework | Spring Boot | 2.7.17 |
+| ORM Framework | MyBatis | 2.3.1 |
+| Database | MySQL | 8.0+ |
+| API Documentation | SpringDoc OpenAPI (Swagger UI) | 1.7.0 |
+| Authentication | JWT (JJWT) | 0.11.5 |
+| Build Tool | Maven | 3.6+ |
+| Frontend | Vanilla HTML / CSS / JS (Spring Boot static hosting) | - |
 
-系统采用**前后端一体**的架构：后端提供 RESTful API，前端页面通过 Spring Boot 内嵌的静态资源服务直接托管，无需独立的 Node.js 前端工程。
+The system uses a **monolithic architecture**: the backend provides RESTful APIs, while frontend pages are served directly through Spring Boot's embedded static resource handler — no separate Node.js frontend build required.
 
-## 漏洞类型覆盖
+## Vulnerability Categories
 
-系统覆盖以下 13 类 Web 安全漏洞，共计 50+ 个挑战关卡：
+The system covers the following 13 categories of Web security vulnerabilities, with 50+ challenge levels in total:
 
-| 漏洞类型 | 标识 | 关卡数 | 关卡难度 |
-|---------|------|-------|---------|
-| 认证与会话安全 | auth-session | 5 | 入门 → 进阶 |
-| SQL 注入 | injection | 11 | 入门 → 进阶 |
-| 跨站脚本 XSS | xss | 5 | 入门 → 进阶 |
-| XXE 外部实体注入 | xxe | 5 | 入门 → 进阶 |
-| 跨站请求伪造 CSRF | csrf | 5 | 入门 → 进阶 |
-| 服务器端请求伪造 SSRF | ssrf | 6 | 入门 → 进阶 |
-| 远程命令执行 RCE | rce | 5 | 入门 → 进阶 |
-| 失效的访问控制 | access-control | 5 | 入门 → 进阶 |
-| 文件操作 | file-operation | 5 | 入门 → 进阶 |
-| 安全配置 | security-config | 4 | 入门 → 进阶 |
-| 敏感信息泄露 | info-leak | 5 | 入门 → 进阶 |
-| 业务逻辑错误 | business-logic | 5 | 入门 → 进阶 |
-| 不安全的反序列化 | deserialization | 5 | 入门 → 进阶 |
+| Vulnerability Type | Identifier | Levels | Difficulty |
+|-------------------|-----------|--------|-----------|
+| Authentication & Session | auth-session | 5 | Beginner → Advanced |
+| SQL Injection | injection | 11 | Beginner → Advanced |
+| Cross-Site Scripting (XSS) | xss | 5 | Beginner → Advanced |
+| XXE External Entity Injection | xxe | 5 | Beginner → Advanced |
+| Cross-Site Request Forgery (CSRF) | csrf | 5 | Beginner → Advanced |
+| Server-Side Request Forgery (SSRF) | ssrf | 6 | Beginner → Advanced |
+| Remote Code Execution (RCE) | rce | 5 | Beginner → Advanced |
+| Broken Access Control | access-control | 5 | Beginner → Advanced |
+| File Operations | file-operation | 5 | Beginner → Advanced |
+| Security Misconfiguration | security-config | 4 | Beginner → Advanced |
+| Sensitive Information Leakage | info-leak | 5 | Beginner → Advanced |
+| Business Logic Errors | business-logic | 5 | Beginner → Advanced |
+| Insecure Deserialization | deserialization | 5 | Beginner → Advanced |
 
-## 关卡结构
+## Challenge Structure
 
-每个漏洞类型遵循统一的关卡结构：
+Each vulnerability type follows a consistent challenge structure:
 
 ```
-获取秘籍（Level 0）   ：该类漏洞的原理、成因和风险概述（系统内置文档，无需单独通关）
-实战挑战（Level 1~N） ：由浅入深的实战攻击关卡，每关需获取 Flag
-终结（Level N+1）     ：综合总结，回顾学习路径与防护要点（系统内置文档，无需单独通关）
+Playbook (Level 0)     : Principles, causes, and risk overview (built-in docs, no separate walkthrough needed)
+Hands-on (Level 1~N)  : Progressive attack challenges, each requiring a Flag to complete
+Finale (Level N+1)     : Comprehensive summary, review of learning path and protection points (built-in docs, no separate walkthrough needed)
 ```
 
-> **Wiki 文档说明**："获取秘籍"和"终结"关卡的内容已内嵌在系统中，Wiki 不再为它们单独生成文档。Wiki 仅针对实战挑战关卡提供详细的通关指南。
+> **Wiki Note**: The "Playbook" and "Finale" levels are embedded in the system and do not require separate Wiki documentation. The Wiki only provides detailed walkthroughs for the hands-on challenge levels.
 
-**关卡进度**：系统自动追踪每个关卡的完成状态（未开始 → 进行中 → 已完成），用户可在首页和关卡列表中查看整体进度。
+**Progress Tracking**: The system automatically tracks the completion status of each level (Not Started → In Progress → Completed). Users can view overall progress on the homepage and level list.
 
-## 核心功能
+## Core Features
 
-- **实战攻击**：每个关卡提供真实的攻击场景，学习者通过构造恶意请求获取 Flag
-- **代码溯源**：提供完整的源代码，学习者可对照后端代码理解漏洞的成因和触发条件
-- **Flag 验证**：每关有唯一的 Flag 值，提交正确的 Flag 即标记为通关
-- **国际化**：支持中英文切换
-- **Swagger 文档**：集成 OpenAPI 文档，方便查看和调试接口
+- **Hands-on Attacks**: Each level provides a real attack scenario where learners craft malicious requests to capture Flags
+- **Code Tracing**: Complete source code is available for learners to understand vulnerability causes and trigger conditions
+- **Flag Validation**: Each level has a unique Flag value; submitting the correct Flag marks the level as completed
+- **Internationalization**: Supports Chinese and English language switching
+- **Swagger Docs**: Integrated OpenAPI documentation for easy API viewing and debugging
 
-## 风险提示
+## Risk Warning
 
-> **MadRabbit 包含大量故意植入的安全漏洞，仅供安全教学与授权测试使用。**
+> **MadRabbit contains intentionally planted security vulnerabilities and is intended solely for security education and authorized testing.**
 >
-> - 请勿将本系统部署到公网环境
-> - 请勿将本系统用于未授权的渗透测试
-> - 请在隔离的本地环境中使用
+> - Do NOT deploy this system to the public internet
+> - Do NOT use this system for unauthorized penetration testing
+> - Use only in an isolated local environment
