@@ -75,6 +75,25 @@
       }
     })();
 
+    // Convert hash route between languages
+    function convertHash(hash, toLang) {
+      if (!hash || hash === '#' || hash === '#/' || hash === '#/home_zh' || hash === '#/README') {
+        return toLang === 'zh' ? '#/home_zh' : '';
+      }
+      if (toLang === 'zh') {
+        return hash.replace(/_en/g, '');
+      } else {
+        // EN: add _en before the end of the path
+        // e.g. #/SQL注入/漏洞原理 -> #/SQL注入/漏洞原理_en
+        var parts = hash.split('?');
+        var path = parts[0];
+        if (path.indexOf('_en') === -1) {
+          path = path + '_en';
+        }
+        return parts.length > 1 ? path + '?' + parts[1] : path;
+      }
+    }
+
     // Click handler
     document.getElementById('wikiLangSwitch').addEventListener('click', function(e) {
       var btn = e.target.closest('button[data-lang]');
@@ -82,6 +101,14 @@
       var lang = btn.getAttribute('data-lang');
       if (lang === currentLang) return;
       localStorage.setItem('wiki-lang', lang);
+      // Convert current hash to target language before reload
+      var newHash = convertHash(location.hash, lang);
+      if (newHash) {
+        location.hash = newHash;
+      } else {
+        // Navigate to English homepage
+        location.hash = '';
+      }
       location.reload();
     });
 
@@ -94,7 +121,6 @@
         var href = a.getAttribute('href');
         if (!href) continue;
         if (lang === 'zh') {
-          // Remove _en from hash routes
           if (href.indexOf('_en') !== -1) {
             a.setAttribute('href', href.replace(/_en/g, ''));
           }
@@ -120,27 +146,8 @@
       },
       plugins: [
         function(hook, vm) {
-          // On init, redirect homepage to Chinese version if lang=zh
-          hook.init(function() {
-            if (currentLang === 'zh') {
-              var hash = location.hash;
-              if (!hash || hash === '#/' || hash === '#') {
-                location.hash = '#/home_zh';
-              }
-            }
-          });
-
           hook.doneEach(function() {
             transformSidebarLinks(currentLang);
-
-            // If Chinese and on README (homepage), redirect to home_zh
-            if (currentLang === 'zh') {
-              var route = vm.route && vm.route.path;
-              if (route === '/' || route === '') {
-                vm.route.to('/home_zh');
-                return;
-              }
-            }
           });
         }
       ]
