@@ -75,7 +75,7 @@
       }
     })();
 
-    // Click handler - save lang and reload
+    // Click handler
     document.getElementById('wikiLangSwitch').addEventListener('click', function(e) {
       var btn = e.target.closest('button[data-lang]');
       if (!btn) return;
@@ -92,12 +92,15 @@
       for (var i = 0; i < links.length; i++) {
         var a = links[i];
         var href = a.getAttribute('href');
-        if (!href || href === '#' || href.indexOf('.md') === -1) continue;
+        if (!href) continue;
+
         if (lang === 'zh') {
-          // EN -> ZH: remove _en before .md
-          a.setAttribute('href', href.replace(/_en\.md/g, '.md'));
+          // EN -> ZH: remove _en from hash routes like #/xxx_en
+          if (href.indexOf('_en') !== -1) {
+            a.setAttribute('href', href.replace(/_en/g, ''));
+          }
         }
-        // Default sidebar is already EN (_en.md), so no transform needed for 'en'
+        // Default is EN, sidebar already has _en links, no transform needed
       }
     }
 
@@ -117,7 +120,7 @@
         depth: 3
       },
       plugins: [
-        function(hook, vm) {
+        function(hook) {
           hook.doneEach(function() {
             transformSidebarLinks(currentLang);
           });
