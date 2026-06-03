@@ -93,14 +93,12 @@
         var a = links[i];
         var href = a.getAttribute('href');
         if (!href) continue;
-
         if (lang === 'zh') {
-          // EN -> ZH: remove _en from hash routes like #/xxx_en
+          // Remove _en from hash routes
           if (href.indexOf('_en') !== -1) {
             a.setAttribute('href', href.replace(/_en/g, ''));
           }
         }
-        // Default is EN, sidebar already has _en links, no transform needed
       }
     }
 
@@ -112,6 +110,7 @@
       subMaxLevel: 2,
       auto2top: true,
       basePath: '/wiki/',
+      notFoundPage: '404.md',
       search: {
         maxAge: 86400000,
         paths: 'auto',
@@ -120,9 +119,28 @@
         depth: 3
       },
       plugins: [
-        function(hook) {
+        function(hook, vm) {
+          // On init, redirect homepage to Chinese version if lang=zh
+          hook.init(function() {
+            if (currentLang === 'zh') {
+              var hash = location.hash;
+              if (!hash || hash === '#/' || hash === '#') {
+                location.hash = '#/home_zh';
+              }
+            }
+          });
+
           hook.doneEach(function() {
             transformSidebarLinks(currentLang);
+
+            // If Chinese and on README (homepage), redirect to home_zh
+            if (currentLang === 'zh') {
+              var route = vm.route && vm.route.path;
+              if (route === '/' || route === '') {
+                vm.route.to('/home_zh');
+                return;
+              }
+            }
           });
         }
       ]
