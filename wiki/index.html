@@ -22,7 +22,6 @@
     .markdown-section { max-width: 900px; }
     .sidebar-toggle { background-color: #0d1117; }
 
-    /* Fixed Language Switcher - top right corner */
     .wiki-lang-switch {
       position: fixed;
       top: 12px;
@@ -48,79 +47,59 @@
       transition: all 0.2s;
       line-height: 1.4;
     }
-    .wiki-lang-switch button:hover {
-      color: #00f3ff;
-    }
+    .wiki-lang-switch button:hover { color: #00f3ff; }
     .wiki-lang-switch button.active {
       background: #00f3ff;
       color: #0d1117;
       font-weight: 600;
     }
-    .wiki-lang-switch .sep {
-      color: #30363d;
-      font-size: 11px;
-      user-select: none;
-    }
+    .wiki-lang-switch .sep { color: #30363d; font-size: 11px; user-select: none; }
   </style>
 </head>
 <body>
-  <!-- Fixed language switcher -->
   <div class="wiki-lang-switch" id="wikiLangSwitch">
     <button data-lang="en" class="active">EN</button>
     <span class="sep">|</span>
     <button data-lang="zh">中文</button>
   </div>
-
   <div id="app">Loading...</div>
+
   <script>
-    var currentLang = localStorage.getItem('madrabbit-wiki-lang') || 'en';
+    var currentLang = localStorage.getItem('wiki-lang') || 'en';
 
     // Set initial button state
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
       var btns = document.querySelectorAll('#wikiLangSwitch button');
-      btns.forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-lang') === currentLang);
-      });
-    });
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle('active', btns[i].getAttribute('data-lang') === currentLang);
+      }
+    })();
 
-    function applyLang(lang) {
-      var sidebar = document.querySelector('.sidebar-nav');
-      if (!sidebar) return;
-      var links = sidebar.querySelectorAll('a[href]');
-      links.forEach(function(link) {
-        var href = link.getAttribute('href');
-        if (!href || href === '#') return;
-        if (lang === 'zh') {
-          if (href.indexOf('_en.md') !== -1) {
-            link.setAttribute('href', href.replace(/_en\.md/g, '.md'));
-          }
-        } else {
-          if (href.indexOf('_en.md') === -1 && href.match(/\.md$/)) {
-            link.setAttribute('href', href.replace(/\.md$/, '_en.md'));
-          }
-        }
-      });
-    }
-
-    // Language switch click handler
+    // Click handler - save lang and reload
     document.getElementById('wikiLangSwitch').addEventListener('click', function(e) {
       var btn = e.target.closest('button[data-lang]');
       if (!btn) return;
       var lang = btn.getAttribute('data-lang');
       if (lang === currentLang) return;
-      currentLang = lang;
-      localStorage.setItem('madrabbit-wiki-lang', lang);
-      this.querySelectorAll('button').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-lang') === lang);
-      });
-      applyLang(lang);
-      // Reload current page in new language
-      var activeLink = document.querySelector('.sidebar-nav a.active');
-      if (activeLink) {
-        var href = activeLink.getAttribute('href');
-        if (href && window.__docsifyVM) window.__docsifyVM.route.to(href);
-      }
+      localStorage.setItem('wiki-lang', lang);
+      location.reload();
     });
+
+    function transformSidebarLinks(lang) {
+      var sidebar = document.querySelector('.sidebar-nav');
+      if (!sidebar) return;
+      var links = sidebar.querySelectorAll('a');
+      for (var i = 0; i < links.length; i++) {
+        var a = links[i];
+        var href = a.getAttribute('href');
+        if (!href || href === '#' || href.indexOf('.md') === -1) continue;
+        if (lang === 'zh') {
+          // EN -> ZH: remove _en before .md
+          a.setAttribute('href', href.replace(/_en\.md/g, '.md'));
+        }
+        // Default sidebar is already EN (_en.md), so no transform needed for 'en'
+      }
+    }
 
     window.$docsify = {
       name: 'MadRabbit Wiki',
@@ -129,6 +108,7 @@
       loadSidebar: true,
       subMaxLevel: 2,
       auto2top: true,
+      basePath: '/wiki/',
       search: {
         maxAge: 86400000,
         paths: 'auto',
@@ -138,9 +118,8 @@
       },
       plugins: [
         function(hook, vm) {
-          window.__docsifyVM = vm;
           hook.doneEach(function() {
-            applyLang(currentLang);
+            transformSidebarLinks(currentLang);
           });
         }
       ]
